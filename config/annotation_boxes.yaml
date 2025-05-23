@@ -1,0 +1,86 @@
+segments_extractor:
+  ram:
+    model_version: "ram"  # Version of the RAM model to use
+    model_checkpoint: "/mnt/vol0/weights/ram/ram_swin_large_14m.pth"  # Path to RAM model checkpoint
+  
+  # Grounding DINO model configuration
+  grounding_dino:
+    config: "/mnt/vol0/weights/groundingdino/config/GroundingDINO_SwinT_OGC.py"  # Path to Grounding DINO config file
+    model_checkpoint: "/mnt/vol0/weights/groundingdino/groundingdino_swint_ogc.pth"  # Path to Grounding DINO model checkpoint
+  
+  # Device to run models on (e.g. "cuda" or "cpu")
+  device: "cuda"
+  
+  # List of tags to exclude from processing
+  tags_blacklist:
+    - "room"
+    - "building"
+    - "floor"
+    - "carpet"
+    - "wall"
+    - "ceiling"
+    - "road"
+    - "pavement"
+    - "walk"
+    - "city"
+    - "street"
+    - "person"
+    - "man"
+    - "woman"
+    - "people"
+    - "shopper"
+    - "corridor"
+    - "hallway"
+    - "sky"
+    - "sun"
+    - "light"
+    - "pathway"
+    - "structure"
+    - "wall"
+    - "shoes"
+    - "path"
+    - "road"
+    - "snow"
+    - "shopper"
+    - "bag"
+
+  stochastic_tags_blacklist:
+    - "building"
+    - "people"
+    - "person"
+    - "man"
+    - "woman"
+    - "individual"
+    - "individuals"
+    - "tree"
+    - "child"
+    - "boy"
+    - "girl"
+  
+
+
+# Scene object selector configuration
+scene_object_selector:
+  # Filter for objects based on their area
+  area_objects_filter:
+    threshold_percent: 0.4  # Minimum area threshold as percentage of image size
+
+  # Filter for objects that are too close to each other
+  close_objects_filter:
+    min_distance: 3.0  # Minimum distance between objects
+
+  # Filter for objects that are too far from trajectory
+  far_traj_objects_filter:
+    max_distance: 5.0  # Maximum distance from trajectory
+
+# Trajectory splitting configuration
+split_traj:
+  distance_threshold: 3.0  # Distance threshold for splitting trajectory
+
+# Global trajectory sampling parameters
+global_traj_interval: 50  # Interval for sampling frames from global trajectory
+
+# Local trajectory parameters
+local_traj_horizon: 75  # How many steps to look ahead in local trajectory
+local_traj_interval: 3  # Sampling interval for local trajectory points
+min_local_traj_length: 15  # Minimum number of points required in local trajectory

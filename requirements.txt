@@ -1,0 +1,20 @@
+--extra-index-url https://download.pytorch.org/whl/cu124
+torch==2.5.1
+torchvision==0.20.1
+transformers==4.46.3
+accelerate==1.5.2
+bitsandbytes==0.45.4
+matplotlib==3.10.1
+fire==0.7.0
+tqdm==4.67.1
+pandas==2.2.3
+luigi==3.6.0
+av==14.3.0
+opencv-python==4.10.0.82
+numpy==1.26.4
+scipy==1.12.0
+autoroot==1.0.1
+pyarrow==20.0.0
+git+https://github.com/xinyu1205/recognize-anything.git
+git+https://github.com/IDEA-Research/GroundingDINO.git
+git+https://github.com/facebookresearch/segment-anything.git

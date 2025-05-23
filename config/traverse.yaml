@@ -1,0 +1,4 @@
+window_step: 25
+action_length: 4
+action_step: 5
+min_distance: 0.7
