@@ -1,3 +1,4 @@
+import autoroot
 import json
 import fire
 import pandas as pd
