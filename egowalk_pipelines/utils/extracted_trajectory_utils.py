@@ -1,14 +1,17 @@
 import numpy as np
 
 from pathlib import Path
-from egowalk_tools.trajectory import DefaultTrajectory
-from canguro_processing_tools.misc.types import PathLike
+from egowalk_dataset.datasets.trajectory.trajectory import EgoWalkTrajectory
+from egowalk_pipelines.misc.types import PathLike
 
 
-def split_traj(traj_path: PathLike, distance_threshold: float = 3.) -> list[list[int]]:
-    initial_traj = DefaultTrajectory(Path(traj_path))
-    rgb_timestamps = initial_traj.rgb_left.timestamps
-    odom_timestamps = set(initial_traj.odometry.timestamps)
+def split_traj(traj_name: str,
+               data_root: PathLike,
+               distance_threshold: float = 3.) -> list[list[int]]:
+    initial_traj = EgoWalkTrajectory.from_dataset(traj_name,
+                                                  data_root)
+    rgb_timestamps = initial_traj.rgb.timestamps
+    odom_timestamps = set(initial_traj.odometry.valid_timestamps)
     
     splits = []
     current_split = []

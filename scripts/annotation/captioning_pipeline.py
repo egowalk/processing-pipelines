@@ -1,3 +1,4 @@
+import autoroot
 import yaml
 import fire
 import torch
@@ -9,8 +10,8 @@ from PIL import Image
 from transformers import (AutoModelForCausalLM, 
                           AutoTokenizer,
                           BitsAndBytesConfig)
-from egowalk_tools.trajectory import DefaultTrajectory
-from canguro_processing_tools.utils.io_utils import SequentialCSVWriter
+from egowalk_dataset.datasets.trajectory.trajectory import EgoWalkTrajectory
+from egowalk_pipelines.utils.io_utils import SequentialCSVWriter
 
 
 MODEL_PATH = "THUDM/cogvlm2-llama3-chat-19B"
@@ -95,25 +96,26 @@ def store_captions(traj_path: Path,
     csv_writer.dump(traj_path / OUTPUT_FILE_NAME)
 
 
-def process_single_trajectory(traj_path: Path,
+def process_single_trajectory(data_root: Path,
+                              annotation_path: Path,
                                batch_size: int,
                                prompt: str,
                                box_padding: int,
                                tokenizer: AutoTokenizer,
                                model: AutoModelForCausalLM,
                                max_new_tokens: int):
-    if (traj_path / OUTPUT_FILE_NAME).is_file():
+    if (annotation_path / OUTPUT_FILE_NAME).is_file():
         return
 
-    boxes_df = pd.read_csv(traj_path / "annotation_boxes.csv")
-    traj_rgb = DefaultTrajectory(traj_path).rgb_left
+    boxes_df = pd.read_csv(annotation_path / "annotation_boxes.csv")
+    traj_rgb = EgoWalkTrajectory.from_dataset(annotation_path.name, data_root).rgb
 
     length = len(boxes_df)
 
     # Dictionary to store image names as keys and captions as values
     captions_list = []
 
-    for idx in tqdm(range(0, length, batch_size), leave=False, desc=f"Processing {traj_path.name}"):
+    for idx in tqdm(range(0, length, batch_size), leave=False, desc=f"Processing {annotation_path.name}"):
         i_list = []
         for i in range(batch_size):
             if idx + i < length:
@@ -156,11 +158,11 @@ def process_single_trajectory(traj_path: Path,
         for i, caption in zip(i_list, outlist):
             captions_list.append(caption)
 
-    store_captions(traj_path, captions_list, boxes_df)
+    store_captions(annotation_path, captions_list, boxes_df)
 
 
-
-def main(trajectories_root: str,
+def main(data_root: str,
+         annotation_root: str,
          config: str,
          batch_size: int = 3,
          hf_cache_dir: str | None = None):
@@ -170,7 +172,10 @@ def main(trajectories_root: str,
     box_padding = config["box_padding"]
     max_new_tokens = config["max_new_tokens"]
 
-    all_traj_dirs = list(Path(trajectories_root).glob("*/"))
+    data_root = Path(data_root)
+    annotation_root = Path(annotation_root)
+
+    all_traj_dirs = list(annotation_root.glob("*/"))
 
     tokenizer = AutoTokenizer.from_pretrained(
         MODEL_PATH,
@@ -188,15 +193,14 @@ def main(trajectories_root: str,
     ).eval()
 
     for traj_path in tqdm(all_traj_dirs):
-        process_single_trajectory(traj_path=traj_path,
+        process_single_trajectory(data_root=data_root,
+                                  annotation_path=traj_path,
                                   batch_size=batch_size,
                                   prompt=prompt,
                                   box_padding=box_padding,
                                   tokenizer=tokenizer,
                                   model=model,
                                   max_new_tokens=max_new_tokens)
-
-
 
 
 if __name__ == "__main__":

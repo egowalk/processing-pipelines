@@ -1,26 +1,21 @@
+import autoroot
 import yaml
 import fire
 import luigi
 import numpy as np
-from typing import List, Union, Tuple, Any
+from typing import List, Tuple, Any
 from pathlib import Path
-from egowalk_tools.trajectory import DefaultTrajectory
-from canguro_processing_tools.misc.segments import BoundingBox
-from canguro_processing_tools.utils.camera_utils import (DEFAULT_CAMERA_PARAMS,
-                                                         project_points)
-from canguro_processing_tools.utils.math_utils import to_relative_frame
-from canguro_processing_tools.models.sam import SAM
-from canguro_processing_tools.misc.segments import Segment, BoundingBox
-from canguro_processing_tools.models.ram import RAM
-from canguro_processing_tools.models.tag2text import Tag2Text
-from canguro_processing_tools.models.grounding_dino import GroundingDINOModel
-from canguro_processing_tools.models.segments_extraction import RAMGroundingDINOSegmentsExtractor, DEFAULT_TAGS_BLACKLIST
-from canguro_processing_tools.utils.str_utils import seconds_to_human_readable_time
-from canguro_processing_tools.annotation.tools import SceneObjectFinder, SceneObjectSelector
-from canguro_processing_tools.annotation.filters import AreaObjectsFilter, CloseObjectsFilter, FarTrajObjectsFilter, ClosestTrajObjectSelector
-from canguro_processing_tools.utils.extracted_trajectory_utils import split_traj
-from canguro_processing_tools.utils.sync_utils import TimestampIndexer
-from canguro_processing_tools.utils.io_utils import SequentialCSVWriter
+from egowalk_dataset.datasets.trajectory.trajectory import EgoWalkTrajectory
+from egowalk_pipelines.misc.segments import BoundingBox
+from egowalk_pipelines.utils.math_utils import to_relative_frame
+from egowalk_pipelines.models.ram import RAM
+from egowalk_pipelines.models.grounding_dino import GroundingDINOModel
+from egowalk_pipelines.models.segments_extraction import RAMGroundingDINOSegmentsExtractor
+from egowalk_pipelines.annotation.tools import SceneObjectFinder, SceneObjectSelector
+from egowalk_pipelines.annotation.filters import AreaObjectsFilter, CloseObjectsFilter, FarTrajObjectsFilter, ClosestTrajObjectSelector
+from egowalk_pipelines.utils.extracted_trajectory_utils import split_traj
+from egowalk_pipelines.utils.sync_utils import TimestampIndexer
+from egowalk_pipelines.utils.io_utils import SequentialCSVWriter
 
 
 _HOST_DOCKER_HOST = "docker_host"
@@ -29,16 +24,17 @@ _ANNOTATION_FILE_NAME = "annotation_boxes.csv"
 
 
 class ProcessSingleTrajectory(luigi.Task):
-    trajectory_dir = luigi.Parameter(description="Path to the trajectory directory to process")
+    data_root = luigi.Parameter(description="Path to the data root directory")
+    traj_name = luigi.Parameter(description="Name of the trajectory to process")
+    output_root = luigi.Parameter(description="Path to the output root directory")
     config = luigi.Parameter(description="Path to the config file")
 
     def output(self):
-        trajectory_dir = Path(self.trajectory_dir)
-        annotation_file = trajectory_dir / _ANNOTATION_FILE_NAME
+        annotation_file = Path(self.output_root) / self.traj_name / _ANNOTATION_FILE_NAME
         return luigi.LocalTarget(str(annotation_file))
 
     def run(self):
-        print(f"Processing {self.trajectory_dir}...")
+        print(f"Processing {self.traj_name}...")
         config = self._load_config()
         objects = self._extract_objects(config)
         self._dump_objects(objects)
@@ -61,7 +57,9 @@ class ProcessSingleTrajectory(luigi.Task):
                            ],
                            selector=ClosestTrajObjectSelector())
         
-        splits = split_traj(self.trajectory_dir, distance_threshold=config["split_traj"]["distance_threshold"])
+        splits = split_traj(self.traj_name,
+                            self.data_root,
+                            distance_threshold=config["split_traj"]["distance_threshold"])
         start_ts = splits[0][0]
         end_ts = splits[-1][-1]
         result = []
@@ -74,17 +72,20 @@ class ProcessSingleTrajectory(luigi.Task):
         self._progress_monitor(end_ts, (start_ts, end_ts))
         return result
     
-    def _extract_from_split(self, timestamps: List[Path], 
+    def _extract_from_split(self, 
+                            timestamps: List[Path], 
                             config: dict[str, Any],
                             scene_object_finder: SceneObjectFinder,
                             scene_object_selector: SceneObjectSelector,
                             global_start_end_timestamps: Tuple[int, int]) -> List[Tuple[str, BoundingBox, str]]:
-        traj = DefaultTrajectory(self.trajectory_dir, timestamps=timestamps)
-    
-        rgb_timestamps = traj.rgb_left.timestamps
-        odom_timestamps = traj.odometry.timestamps
+        traj = EgoWalkTrajectory.from_dataset(self.traj_name,
+                                              self.data_root,
+                                              timestamps=timestamps)
+
+        rgb_timestamps = traj.rgb.timestamps
+        odom_timestamps = traj.odometry.valid_timestamps
         odom_indexer = TimestampIndexer(odom_timestamps)
-        traj_2d = traj.odometry.to_traj_2d_array()
+        traj_2d = traj.odometry.get_bev(filter_valid=True)
 
         result = []
 
@@ -98,7 +99,7 @@ class ProcessSingleTrajectory(luigi.Task):
                 continue
             
             footsteps = to_relative_frame(footsteps)
-            img = traj.rgb_left.at(rgb_ts)
+            img = traj.rgb.at(rgb_ts)
             depth_img = traj.depth.at(rgb_ts)
 
             objects = scene_object_finder(img, depth_img)
@@ -119,6 +120,8 @@ class ProcessSingleTrajectory(luigi.Task):
         for rgb_ts, bbox, tag in objects:
             x, y, w, h = bbox.xywh
             csv_writer.add_line((rgb_ts, x, y, w, h, tag))
+        output_dir = Path(self.output().path).parent
+        output_dir.mkdir(parents=True, exist_ok=True)
         csv_writer.dump(self.output().path)
 
     def _load_config(self) -> dict[str, Any]:
@@ -141,29 +144,35 @@ class ProcessSingleTrajectory(luigi.Task):
 
 
 class ProcessAllTrajectories(luigi.WrapperTask):
-    trajectories_root = luigi.Parameter(description="Path to the trajectories root directory")
+    data_root = luigi.Parameter(description="Path to the data root directory")
+    output_root = luigi.Parameter(description="Path to the output root directory")
     config = luigi.Parameter(description="Path to the config file")
 
     def requires(self):
         trajectories = self._read_list()
         for trajectory in trajectories:
             yield ProcessSingleTrajectory(
-                trajectory_dir=str(trajectory),
+                data_root=self.data_root,
+                traj_name=trajectory,
+                output_root=self.output_root,
                 config=self.config
             )
 
     def _read_list(self) -> List[Path]:
-        trajectories_root = Path(self.trajectories_root)
-        return sorted([e for e in trajectories_root.iterdir() if e.is_dir()])
+        trajectories_root = Path(self.data_root)
+        trajectories = sorted([e.stem for e in (trajectories_root / "data").glob("*.parquet")])
+        return trajectories
 
 
-def main(trajectories_root: str,
+def main(data_root: str,
+         output_root: str,
          config: str,
          n_workers: int = 0,
          local: bool = False,
          scheduler_host: str = "localhost",
          scheduler_port: int = 8082):
-    trajectories_root = Path(trajectories_root)
+    data_root = Path(data_root)
+    output_root = Path(output_root)
     config = Path(config)
 
     kwargs = {}
@@ -179,7 +188,8 @@ def main(trajectories_root: str,
 
     luigi.build([
         ProcessAllTrajectories(
-            trajectories_root=str(trajectories_root),
+            data_root=str(data_root),
+            output_root=str(output_root),
             config=str(config)
         )],
         **kwargs

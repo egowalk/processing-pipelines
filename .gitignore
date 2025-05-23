@@ -170,3 +170,6 @@ single.txt
 
 dir_links/*
 !dir_links/.gitkeep
+
+weights/*
+!weights/.gitkeep

@@ -1,10 +1,10 @@
 import numpy as np
 
 from typing import Any
-from canguro_processing_tools.models.segments_extraction import RAMGroundingDINOSegmentsExtractor
-from canguro_processing_tools.utils.camera_utils import CameraParameters, DEFAULT_CAMERA_PARAMS, get_depth
-from canguro_processing_tools.annotation.objects import SceneObject
-from canguro_processing_tools.annotation.filters import AbstractObjectsFilter, AbstractObjectSelector
+from egowalk_pipelines.models.segments_extraction import RAMGroundingDINOSegmentsExtractor
+from egowalk_pipelines.utils.camera_utils import CameraParameters, DEFAULT_CAMERA_PARAMS, get_depth
+from egowalk_pipelines.annotation.objects import SceneObject
+from egowalk_pipelines.annotation.filters import AbstractObjectsFilter, AbstractObjectSelector
 
 
 class SceneObjectFinder:

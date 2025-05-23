@@ -1,7 +1,7 @@
 import numpy as np
 
 from dataclasses import dataclass
-from canguro_processing_tools.misc.segments import Segment
+from egowalk_pipelines.misc.segments import Segment
 
 
 @dataclass

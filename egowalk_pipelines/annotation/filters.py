@@ -3,7 +3,7 @@ import numpy as np
 from abc import ABC, abstractmethod
 from typing import Any
 from scipy.spatial.distance import cdist
-from canguro_processing_tools.annotation.objects import SceneObject
+from egowalk_pipelines.annotation.objects import SceneObject
 
 
 class AbstractObjectsFilter(ABC):

@@ -9,10 +9,10 @@ from pathlib import Path
 from typing import Any
 from functools import partial
 from tqdm import tqdm
-from canguro_processing_tools.models.sam import SAMTraversePredictor
-from canguro_processing_tools.utils.camera_utils import DEFAULT_CAMERA_PARAMS, project_points
-from canguro_processing_tools.utils.parallel_utils import do_parallel
-from canguro_processing_tools.utils.str_utils import zfill_zeros_pad
+from egowalk_pipelines.models.sam import SAMTraversePredictor
+from egowalk_pipelines.utils.camera_utils import DEFAULT_CAMERA_PARAMS, project_points
+from egowalk_pipelines.utils.parallel_utils import do_parallel
+from egowalk_pipelines.utils.str_utils import zfill_zeros_pad
 from egowalk_dataset.datasets.gnm.gnm_indexing import index_gnm
 from egowalk_dataset.datasets.gnm.cutters import (SpikesCutter,
                                                   StuckCutter,

@@ -1,12 +1,12 @@
 segments_extractor:
   ram:
     model_version: "ram"  # Version of the RAM model to use
-    model_checkpoint: "/mnt/vol0/weights/ram/ram_swin_large_14m.pth"  # Path to RAM model checkpoint
+    model_checkpoint: "weights/ram_swin_large_14m.pth"  # Path to RAM model checkpoint
   
   # Grounding DINO model configuration
   grounding_dino:
-    config: "/mnt/vol0/weights/groundingdino/config/GroundingDINO_SwinT_OGC.py"  # Path to Grounding DINO config file
-    model_checkpoint: "/mnt/vol0/weights/groundingdino/groundingdino_swint_ogc.pth"  # Path to Grounding DINO model checkpoint
+    config: "weights/GroundingDINO_SwinT_OGC.py"  # Path to Grounding DINO config file
+    model_checkpoint: "weights/groundingdino_swint_ogc.pth"  # Path to Grounding DINO model checkpoint
   
   # Device to run models on (e.g. "cuda" or "cpu")
   device: "cuda"
