@@ -99,12 +99,13 @@ class OdometryChannelReader:
     _KEY_TRACKER_MODE = "extraction_zed_tracker_mode"
 
     def __init__(self,
-                 gen_2_enabled: bool = True,
+                 gen_3_enabled: bool = True,
                  verbose: bool = False):
-        self._gen_2_enabled = gen_2_enabled
+        self._gen_3_enabled = gen_3_enabled
         self._verbose = verbose
-        self._tracker_mode = sl.POSITIONAL_TRACKING_MODE.GEN_2 \
-            if gen_2_enabled else sl.POSITIONAL_TRACKING_MODE.GEN_1
+        # Gen 2 is deprecated by ZED
+        self._tracker_mode = sl.POSITIONAL_TRACKING_MODE.GEN_3 \
+            if gen_3_enabled else sl.POSITIONAL_TRACKING_MODE.GEN_1
         self._pose = None  # sl.Pose
         self._translation = None  # sl.Translation
         self._tracking_params = None  # sl.PositionalTrackingParameters
@@ -121,6 +122,11 @@ class OdometryChannelReader:
         tracking_params = sl.PositionalTrackingParameters()
         tracking_params.enable_imu_fusion = True
         tracking_params.mode = self._tracker_mode
+
+        # Experimental params to play with
+        tracking_params.enable_pose_smoothing = False
+        tracking_params.enable_area_memory = True
+
         err = zed.enable_positional_tracking(tracking_params)
         if err != sl.ERROR_CODE.SUCCESS:
             raise ExtractionChannelError(

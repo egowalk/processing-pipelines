@@ -1,4 +1,4 @@
-FROM nvcr.io/nvidia/cuda:12.6.2-cudnn-devel-ubuntu22.04
+FROM nvidia/cuda:12.8.1-cudnn-devel-ubuntu22.04
 
 # Add build arguments for UID and GID
 ARG USER_UID=1000
@@ -17,14 +17,11 @@ RUN apt-get update || true && \
 ENV DEBIAN_frontend=noninteractive
 ENV TZ=Etc/UTC
 ENV LANG=en_US.UTF-8
+ENV NVIDIA_DRIVER_CAPABILITIES \
+    ${NVIDIA_DRIVER_CAPABILITIES:+$NVIDIA_DRIVER_CAPABILITIES,}compute,video,utility
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
 
-
-# Install NVIDIA driver, required by ZED SDK
-RUN apt-get update && \
-    apt-get install -y nvidia-driver-565 && \
-    rm -rf /var/lib/apt/lists/*
 
 # General ZED and Python dependencies
 RUN apt-get update && \
@@ -33,7 +30,7 @@ RUN apt-get update && \
 
 
 # Download and install ZED SDK
-RUN wget -q -O ZED_SDK_Linux_Ubuntu.run https://stereolabs.sfo2.cdn.digitaloceanspaces.com/zedsdk/5.0/ZED_SDK_Ubuntu22_cuda12.8_tensorrt10.9_v5.0.0.zstd.run && \
+RUN wget -q -O ZED_SDK_Linux_Ubuntu.run https://stereolabs.sfo2.cdn.digitaloceanspaces.com/zedsdk/5.1/ZED_SDK_Ubuntu22_cuda12.8_tensorrt10.9_v5.1.2.zstd.run && \
     chmod +x ZED_SDK_Linux_Ubuntu.run && \
     ./ZED_SDK_Linux_Ubuntu.run -- silent skip_cuda
 
@@ -54,4 +51,4 @@ WORKDIR /home/captain/
 RUN chmod a+rwx /home/captain/
 
 # Install common dependencies
-RUN pip3 install --user fire matplotlib tqdm pandas opencv-python==4.10.0.82 git+https://github.com/lilohuang/PyTurboJPEG.git numpy==1.26.4
+# RUN pip3 install --user fire matplotlib tqdm pandas opencv-python==4.10.0.82 git+https://github.com/lilohuang/PyTurboJPEG.git
