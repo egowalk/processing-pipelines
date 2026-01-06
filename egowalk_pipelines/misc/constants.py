@@ -31,6 +31,7 @@ class DepthMode(enum.Enum):
     QUALITY = "quality"
     ULTRA = "ultra"
     NEURAL = "neural"
+    NEURAL_PLUS = "neural_plus"
 
 
 DATA_DIR = "data"

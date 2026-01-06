@@ -211,6 +211,8 @@ class DepthChannelReader:
             init_params.depth_mode = sl.DEPTH_MODE.ULTRA
         elif self._mode == DepthMode.NEURAL:
             init_params.depth_mode = sl.DEPTH_MODE.NEURAL
+        elif self._mode == DepthMode.NEURAL_PLUS:
+            init_params.depth_mode = sl.DEPTH_MODE.NEURAL_PLUS
         else:
             raise ValueError(f"Unsupported depth mode: {self._mode}")
 

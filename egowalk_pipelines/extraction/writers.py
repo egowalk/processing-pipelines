@@ -166,11 +166,11 @@ class BlurringVideoRGBChannelWriter:
             height, width = frame.shape[:2]
             self._video_writer = VideoWriter(codec="libx264",
                                              codec_options={
-                                                'crf': '18',        # Constant Rate Factor - quality control
+                                                'crf': '14',        # Constant Rate Factor - quality control
                                                 'preset': 'ultrafast',     # Encoding speed/compression trade-off
-                                                'x264-params': 'keyint=1:min-keyint=1:scenecut=0:ref=1:bframes=0:slices=16:trellis=0:'
+                                                'x264-params': 'keyint=1:min-keyint=1:scenecut=0:ref=1:bframes=0:slices=16:trellis=2:'
                                                         'deblock=0:analyse=0x1:0x111:me=dia:subme=1:no-mbtree=1:fast_pskip=0:'
-                                                        'no-mixed-refs=1:aq-mode=0',
+                                                        'no-mixed-refs=1:aq-mode=1',
                                                 'tune': 'zerolatency'   # Tune for low latency access
                                              },
                                              rate=100,
