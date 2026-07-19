@@ -9,9 +9,9 @@ fire==0.7.0
 tqdm==4.67.1
 pandas==2.2.3
 luigi==3.6.0
-av==14.3.0
+av==14.2.0
 opencv-python==4.10.0.82
 autoroot==1.0.1
 pyarrow==20.0.0
 einops==0.8.1
-# git+https://github.com/egowalk/egowalk-dataset.git
+numpy==1.26.4

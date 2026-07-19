@@ -206,8 +206,9 @@ class BlurringVideoRGBChannelWriter:
 
     def _process_batch(self):
         if len(self._deque) > 0:
-            detected_faces = self._face_detector(list(self._deque))
-            frames = [self._face_blurrer(frame, boxes) for frame, boxes in zip(self._deque, detected_faces)]
+            # detected_faces = self._face_detector(list(self._deque))
+            # frames = [self._face_blurrer(frame, boxes) for frame, boxes in zip(self._deque, detected_faces)]
+            frames = list(self._deque)
             for frame in frames:
                 self._video_writer.write_frame(frame)
             self._deque.clear()

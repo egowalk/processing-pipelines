@@ -99,13 +99,19 @@ class OdometryChannelReader:
     _KEY_TRACKER_MODE = "extraction_zed_tracker_mode"
 
     def __init__(self,
-                 gen_3_enabled: bool = True,
+                 odometry_gen: int = 3,
                  verbose: bool = False):
-        self._gen_3_enabled = gen_3_enabled
         self._verbose = verbose
-        # Gen 2 is deprecated by ZED
-        self._tracker_mode = sl.POSITIONAL_TRACKING_MODE.GEN_3 \
-            if gen_3_enabled else sl.POSITIONAL_TRACKING_MODE.GEN_1
+        if odometry_gen == 1:
+            self._tracker_mode = sl.POSITIONAL_TRACKING_MODE.GEN_1
+        elif odometry_gen == 2:
+            # Gen 2 is deprecated by ZED
+            print("Warning: Gen 2 is deprecated by ZED")
+            self._tracker_mode = sl.POSITIONAL_TRACKING_MODE.GEN_2
+        elif odometry_gen == 3:
+            self._tracker_mode = sl.POSITIONAL_TRACKING_MODE.GEN_3
+        else:
+            raise ValueError(f"Unsupported odometry generation: {odometry_gen}")
         self._pose = None  # sl.Pose
         self._translation = None  # sl.Translation
         self._tracking_params = None  # sl.PositionalTrackingParameters

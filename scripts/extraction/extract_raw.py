@@ -66,7 +66,7 @@ class ProcessSingleRecording(luigi.Task):
                 ExtractionChannel(
                     name="odometry",
                     reader_cls=OdometryChannelReader,
-                    reader_kwargs={"gen_3_enabled": True, "verbose": True},
+                    reader_kwargs={"odometry_gen": 3, "verbose": True},
                     writer_cls=OdometryChannelWriter,
                     writer_kwargs={}
                 )

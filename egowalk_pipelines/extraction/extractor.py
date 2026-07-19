@@ -392,7 +392,7 @@ class SVOExtractor:
                 if self._progress_callback is not None:
                     self._progress_callback(grab_counter, total_frames)
 
-            elif err == sl.ERROR_CODE.END_OF_SVOFILE_REACHED or frame_counter >= 12:
+            elif err == sl.ERROR_CODE.END_OF_SVOFILE_REACHED:
                 # This just tells that we reached the end of the SVO file and most likely no errors occurred
                 return None, frame_counter
 
